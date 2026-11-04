@@ -1,0 +1,60 @@
+[package]
+name = "najwa-mailbox"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+description = "Najwa store-and-forward mailbox server (Tor onion service) — S16"
+
+[lib]
+name = "najwa_mailbox"
+path = "src/lib.rs"
+
+[[bin]]
+name = "najwa-mailbox"
+path = "src/main.rs"
+
+[dependencies]
+# Web framework
+axum = { version = "0.8", features = ["json", "macros"] }
+tower = "0.5"
+tower-http = { version = "0.6", features = ["trace", "limit"] }
+
+# Async runtime
+tokio = { workspace = true }
+
+# Database — workspace rusqlite so exactly ONE vendored sqlite build exists
+rusqlite = { workspace = true }
+
+# Serialization
+serde = { workspace = true }
+serde_json = { workspace = true }
+toml = "0.8"
+base64 = { workspace = true }
+
+# Cryptography (PoW verification + attestation signing)
+najwa-crypto = { workspace = true }
+sha2 = { workspace = true }
+rand = { workspace = true }
+ed25519-dalek = { workspace = true }
+
+# Error handling
+thiserror = { workspace = true }
+anyhow = "1"
+
+# Logging
+tracing = { workspace = true }
+tracing-subscriber = { version = "0.3", features = ["json", "env-filter"] }
+
+# Utilities
+uuid = { version = "1", features = ["v4"] }
+chrono = { version = "0.4", default-features = false, features = ["clock"] }
+
+[dev-dependencies]
+axum-test = "19"
+tempfile = "3"
+
+[target.'cfg(target_os = "linux")'.dev-dependencies]
+libc = "0.2"

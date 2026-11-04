@@ -1,0 +1,42 @@
+[package]
+name = "najwa-core"
+description = "Core messaging service for Najwa"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+najwa-crypto = { workspace = true }
+najwa-identity = { workspace = true }
+najwa-storage = { workspace = true }
+najwa-transport = { workspace = true }
+najwa-protocol = { workspace = true }
+najwa-sanitize = { workspace = true }
+
+# Async runtime
+tokio = { workspace = true }
+
+# Error handling & logging
+thiserror = { workspace = true }
+tracing = { workspace = true }
+
+# Async traits
+async-trait = { workspace = true }
+futures-util = "0.3"
+
+# RNG
+rand = { workspace = true }
+
+# Hashing
+sha2 = { workspace = true }
+zeroize = { workspace = true }
+
+# Serialization
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+[dev-dependencies]
+tempfile = "3.10"
+flate2 = { workspace = true }

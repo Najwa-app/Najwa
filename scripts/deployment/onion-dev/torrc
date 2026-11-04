@@ -1,0 +1,8 @@
+DataDirectory /var/lib/tor
+SocksPort 0
+ControlPort 0
+Log notice stdout
+SafeLogging 1
+HiddenServiceDir /var/lib/tor/najwa
+HiddenServiceVersion 3
+HiddenServicePort 80 MAILBOX_IP:8080

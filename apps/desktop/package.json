@@ -1,0 +1,23 @@
+{
+  "name": "@najwa/interface",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "web:check": "svelte-check --tsconfig local-web/tsconfig.json",
+    "web:build": "npm run web:check && vite build --config local-web/vite.config.ts",
+    "web:test": "playwright test --config local-web/playwright.config.ts"
+  },
+  "dependencies": {
+    "jsqr": "1.4.0",
+    "phosphor-svelte": "3.1.0",
+    "svelte": "5.57.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0",
+    "@sveltejs/vite-plugin-svelte": "7.3.1",
+    "svelte-check": "4.7.6",
+    "typescript": "6.0.3",
+    "vite": "8.3.5"
+  }
+}

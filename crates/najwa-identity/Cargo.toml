@@ -1,0 +1,79 @@
+[package]
+name = "najwa-identity"
+description = "Identity management and local key protection for Najwa"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[features]
+# Require a hardware-backed Windows device factor. No file or legacy fallback.
+windows-tpm = []
+linux-tpm = ["dep:tss-esapi"]
+macos-secure-enclave = ["dep:core-foundation", "dep:security-framework-sys", "security-framework/OSX_10_15"]
+hardware-keystore = ["windows-tpm", "linux-tpm", "macos-secure-enclave"]
+approved-software-fallback = []
+
+[dependencies]
+najwa-crypto = { workspace = true }
+
+# Error handling & logging
+thiserror = { workspace = true }
+tracing = { workspace = true }
+
+# Serialization
+serde = { workspace = true }
+serde_json = { workspace = true }
+zeroize = { workspace = true }
+
+# Password normalization
+unicode-normalization = "0.1"
+# New-passphrase strength estimate (S02 §11.1)
+zxcvbn = "=3.1.1"
+
+# Crypto (HMAC for rate limiter persistence)
+hmac = { workspace = true }
+sha2 = { workspace = true }
+
+# Random
+rand = { workspace = true }
+
+# BIP-39 mnemonic (Phase 18: seed phrase backup/recovery)
+bip39 = { workspace = true, features = ["zeroize"] }
+
+# Platform: Windows DKM (DPAPI / Credential Manager)
+[target.'cfg(target_os = "windows")'.dependencies]
+windows-sys = { version = "0.59", features = [
+    "Win32_Security_Credentials",
+    "Win32_Security_Cryptography",
+    "Win32_System_TpmBaseServices",
+    "Win32_Foundation",
+    # MoveFileExW write-through replace for atomic_write (S02 §12.2)
+    "Win32_Storage_FileSystem",
+] }
+
+# Platform: macOS Keychain
+[target.'cfg(target_os = "macos")'.dependencies]
+security-framework = "2.9"
+core-foundation = { version = "0.9.4", optional = true }
+security-framework-sys = { version = "=2.17.0", features = ["OSX_10_15"], optional = true }
+
+# Platform: Linux Secret Service
+[target.'cfg(target_os = "linux")'.dependencies]
+# libsecret via dbus — async not needed, use blocking
+keyring = { version = "3", features = ["sync-secret-service", "crypto-rust", "vendored"] }
+dbus-secret-service = { version = "4.1", features = ["crypto-rust", "vendored"] }
+tss-esapi = { version = "=7.7.0", optional = true }
+
+# Platform: Android KeyStore via JNI
+[target.'cfg(target_os = "android")'.dependencies]
+jni = { workspace = true }
+
+[dev-dependencies]
+tempfile = "3.10"
+bip39 = { workspace = true }
+hex = "0.4"
+
+[target.'cfg(target_os = "linux")'.dev-dependencies]
+libc = "0.2"

@@ -1,0 +1,15 @@
+# Tor hidden service configuration for Najwa mailbox server (S16 §11)
+#
+# Place in /etc/tor/torrc (native) or mount into Tor container (Docker).
+
+# Hidden service: maps .onion port 80 → local mailbox server port 8080
+HiddenServiceDir /var/lib/tor/najwa-mailbox/
+HiddenServicePort 80 127.0.0.1:8080
+HiddenServiceVersion 3
+
+# No outbound Tor needed — the mailbox makes no outbound connections (S16 §2, §11)
+SocksPort 0
+ControlPort 0
+
+# Logging
+Log notice file /var/log/tor/notices.log

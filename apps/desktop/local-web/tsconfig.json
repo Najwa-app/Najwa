@@ -1,0 +1,5 @@
+{
+  "extends":"../tsconfig.json",
+  "include":["./*.ts","./*.svelte","../src/**/*.ts","../src/**/*.svelte"],
+  "exclude":["./vite.config.ts","./playwright.config.ts"]
+}

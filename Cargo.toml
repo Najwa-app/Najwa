@@ -1,0 +1,85 @@
+[workspace]
+resolver = "2"
+members = [
+    "apps/local-web",
+    "crates/najwa-crypto",
+    "crates/najwa-identity",
+    "crates/najwa-storage",
+    "crates/najwa-transport",
+    "crates/najwa-protocol",
+    "crates/najwa-sanitize",
+    "crates/najwa-core",
+    "crates/najwa-mailbox",
+    "crates/najwa-privacy",
+    "crates/najwa-ffi",
+    "crates/najwa-cli",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+authors = ["Najwa Team"]
+license = "GPL-3.0-or-later"
+repository = "https://github.com/Najwa-app/Najwa"
+rust-version = "1.90"
+
+[workspace.dependencies]
+# Internal crates
+najwa-crypto = { path = "crates/najwa-crypto" }
+najwa-identity = { path = "crates/najwa-identity" }
+najwa-storage = { path = "crates/najwa-storage" }
+najwa-transport = { path = "crates/najwa-transport" }
+najwa-protocol = { path = "crates/najwa-protocol" }
+najwa-sanitize = { path = "crates/najwa-sanitize" }
+najwa-core = { path = "crates/najwa-core" }
+najwa-mailbox = { path = "crates/najwa-mailbox" }
+najwa-privacy = { path = "crates/najwa-privacy" }
+najwa-ffi = { path = "crates/najwa-ffi" }
+najwa-cli = { path = "crates/najwa-cli" }
+
+# External — versions pinned to match the v1 validated baseline (S01 conformance);
+# bumping any of these invalidates the S18 vector pins in crates/najwa-crypto/tests/.
+ed25519-dalek = { version = "2.1", features = ["rand_core", "serde"] }
+x25519-dalek = { version = "2.0", features = ["serde", "static_secrets"] }
+chacha20poly1305 = "0.10"
+hkdf = "0.12"
+sha2 = "0.10"
+hmac = "0.12"
+argon2 = { version = "0.5", features = ["zeroize"] }
+rand = "0.8"
+rand_core = "0.6"
+getrandom = "0.2"
+zeroize = { version = "1.8", features = ["derive"] }
+rusqlite = { version = "0.38", features = ["bundled-sqlcipher-vendored-openssl", "backup"] }
+tokio = { version = "1", features = ["full"] }
+bincode = "1.3"
+base64 = "0.22"
+qrcode = "0.14"
+image = { version = "0.25", default-features = false, features = ["jpeg", "png", "gif", "bmp", "tiff", "webp"] }
+flate2 = "1.1"
+async-trait = "0.1"
+arti-client = { version = "0.40", default-features = false, features = ["tokio", "onion-service-client", "rustls", "bridge-client", "pt-client"] }
+tor-rtcompat = { version = "0.40", features = ["tokio"] }
+secrecy = "0.10"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+bip39 = "2.2"
+jni = { version = "0.22", default-features = false }
+thiserror = "2.0"
+tracing = "0.1"
+criterion = { version = "0.8", features = ["html_reports"] }
+
+[profile.release]
+lto = true
+codegen-units = 1
+# SECURITY: panic = "unwind" (NOT "abort") is required so that Drop
+# implementations (ZeroizeOnDrop) run during panics. Using "abort" would
+# leave secret keys in memory without zeroization, and core dumps could
+# capture them. The binary size increase from unwinding is acceptable.
+panic = "unwind"
+strip = true
+
+[profile.release-debug]
+inherits = "release"
+debug = true
+strip = false

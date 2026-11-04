@@ -1,0 +1,76 @@
+name: Najwa tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: najwa-test-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  linux:
+    name: Linux tests
+    runs-on: ubuntu-22.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: apps/desktop/package-lock.json
+      - name: Rust toolchain
+        run: |
+          rustup update stable --no-self-update
+          rustup default stable
+      - name: Linux system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pkg-config libssl-dev libdbus-1-dev libtss2-dev gnome-keyring dbus-x11
+      # Registry only: a debug target/ per commit would crowd out the native caches.
+      - name: Cache cargo registry
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('Cargo.lock') }}
+      - name: Source checks
+        run: |
+          bash scripts/check-no-clearnet-dns.sh
+          bash scripts/check-os-rng.sh
+          python scripts/test_package_local_web.py
+      - name: C header compiles as C and C++
+        run: |
+          gcc -std=c99 -Wall -Wextra -Werror -pedantic -fsyntax-only -x c crates/najwa-ffi/include/najwa.h
+          g++ -Wall -Wextra -Werror -pedantic -fsyntax-only -x c++ crates/najwa-ffi/include/najwa.h
+      # Hosted runners have no TPM, so najwa-web's identity tests cannot run:
+      # this is the no-TPM split from docs/development/testing.md. TPM, live
+      # Tor and live mailbox tests stay #[ignore]d.
+      - name: Rust tests
+        run: |
+          cargo test --workspace --locked --exclude najwa-web
+          cargo test --locked -p najwa-web --test profile_guards
+      - name: C ABI smoke test
+        run: sh scripts/testing/c-abi-smoke.sh
+      # keychain-tests.sh moves HOME to a throwaway directory; keep the toolchain.
+      - name: Secret Service tests (private D-Bus session, synthetic keyring)
+        run: |
+          export CARGO_HOME="${CARGO_HOME:-$HOME/.cargo}" RUSTUP_HOME="${RUSTUP_HOME:-$HOME/.rustup}"
+          dbus-run-session -- sh scripts/testing/keychain-tests.sh
+          dbus-run-session -- bash -e -c '
+            printf %s synthetic-ci-keyring | gnome-keyring-daemon --unlock --components=secrets
+            cargo test --locked -p najwa-web --test persistent_profile -- --exact saved_preferences_bridge_failure_idle_lock_and_offline_erasure
+          '
+      - name: Browser UI build and tests
+        working-directory: apps/desktop
+        run: |
+          npm ci
+          npm run web:build
+          npx playwright install --with-deps msedge
+          npm run web:test

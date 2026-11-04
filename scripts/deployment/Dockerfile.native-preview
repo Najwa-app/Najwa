@@ -1,0 +1,86 @@
+# syntax=docker/dockerfile:1.7
+# Build a native Linux client on Windows. Docker is only a build dependency.
+# Supply the already-built browser UI as the web-ui named build context.
+FROM rust:1.90-bookworm AS toolchain
+FROM ubuntu:22.04 AS build
+ENV DEBIAN_FRONTEND=noninteractive CARGO_HOME=/usr/local/cargo RUSTUP_HOME=/usr/local/rustup
+ENV PATH=/usr/local/cargo/bin:$PATH
+COPY --from=toolchain /usr/local/cargo /usr/local/cargo
+COPY --from=toolchain /usr/local/rustup /usr/local/rustup
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential pkg-config perl python3 ca-certificates libdbus-1-dev libtss2-dev \
+    && rm -rf /var/lib/apt/lists/*
+WORKDIR /source
+COPY LICENSE ./LICENSE
+COPY Cargo.toml Cargo.lock ./
+COPY tor-transports.json ./tor-transports.json
+COPY crates/ ./crates/
+COPY apps/local-web/ ./apps/local-web/
+COPY scripts/package-local-web.py ./scripts/package-local-web.py
+COPY scripts/fetch-tor-transports.py ./scripts/fetch-tor-transports.py
+COPY --from=web-ui / /tmp/web-ui/
+RUN --mount=type=cache,id=najwa-web-linux-registry,target=/usr/local/cargo/registry,sharing=locked \
+    --mount=type=cache,id=najwa-web-linux-target,target=/source/target,sharing=locked \
+    rm -rf target/local-web-ui && mkdir -p target/local-web-ui && \
+    cp -a /tmp/web-ui/. target/local-web-ui/ && \
+    CARGO_BUILD_JOBS=4 cargo build --locked -p najwa-web --features bundled-ui --release && \
+    CARGO_BUILD_JOBS=4 cargo test --locked -p najwa-web --features bundled-ui --release \
+      --bin najwa-web --test persistent_profile --test profile_guards --no-run --message-format=json > /tmp/tests.json && \
+    CARGO_BUILD_JOBS=4 cargo test --locked -p najwa-identity --features hardware-keystore,approved-software-fallback --lib --release \
+      --no-run --message-format=json-render-diagnostics > /tmp/identity-tests.json && \
+    CARGO_BUILD_JOBS=4 cargo test --locked -p najwa-identity --features hardware-keystore,approved-software-fallback --test linux_tpm --release \
+      --no-run --message-format=json > /tmp/linux-tests.json && \
+    CARGO_BUILD_JOBS=4 cargo test --locked -p najwa-sanitize --lib --release \
+      --no-run --message-format=json-render-diagnostics > /tmp/sanitize-tests.json && \
+    python3 scripts/package-local-web.py --skip-build > /tmp/package.json && \
+    mkdir -p /export /export-tests && \
+    python3 - <<'PY'
+import json, pathlib, shutil
+package=json.load(open('/tmp/package.json'))
+directory=pathlib.Path(package['directory'])
+shutil.copytree(directory, pathlib.Path('/export')/directory.name)
+for suffix in ['', '.sha256']:
+    file=pathlib.Path(package['archive']+suffix)
+    shutil.copy2(file, pathlib.Path('/export')/file.name)
+tests=set()
+for line in open('/tmp/tests.json'):
+    message=json.loads(line)
+    name=message.get('target',{}).get('name')
+    if name in ['persistent_profile','profile_guards','najwa-web'] and message.get('executable') and message.get('profile',{}).get('test'):
+        shutil.copy2(message['executable'], '/export-tests/'+name)
+        tests.add(name)
+assert len(tests)==3
+unit_tests=set()
+for report in ['identity','linux','sanitize']:
+    for line in open('/tmp/'+report+'-tests.json'):
+        message=json.loads(line)
+        name=message.get('target',{}).get('name')
+        if name in ['najwa_identity','linux_tpm','najwa_sanitize'] and message.get('executable'):
+            shutil.copy2(message['executable'], '/export-tests/'+name)
+            unit_tests.add(name)
+assert len(unit_tests)==3
+PY
+
+FROM ubuntu:22.04 AS verify
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    dbus-x11 gnome-keyring ca-certificates libtss2-esys-3.0.2-0 libtss2-mu0 \
+    libtss2-tctildr0 libtss2-tcti-device0 && rm -rf /var/lib/apt/lists/*
+COPY --from=build /export/ /export/
+COPY --from=build /export-tests/ /tests/
+RUN dbus-run-session -- bash -euc '\
+    printf %s synthetic-native-preview-keyring | gnome-keyring-daemon --unlock --components=secrets; \
+    export NAJWA_WEB_TEST_EXE="$(find /export -type f -name Najwa -print -quit)"; \
+    /tests/najwa_sanitize --nocapture; /tests/najwa_identity --nocapture; /tests/linux_tpm --nocapture; \
+    /tests/najwa_identity approved_software_real_os --ignored --nocapture; \
+    export TSS2_TCTI="swtpm:host=127.0.0.1,port=2321"; \
+    /tests/persistent_profile missing_tpm_ --ignored --nocapture --test-threads=1; \
+    /tests/najwa-web --nocapture --test-threads=1; \
+    /tests/persistent_profile saved_preferences_bridge_failure_idle_lock_and_offline_erasure --nocapture --test-threads=1; \
+    "$(dirname "$NAJWA_WEB_TEST_EXE")/transports/lyrebird" -version; \
+    /tests/profile_guards --nocapture; \
+    echo "Physical Linux TPM validation is PENDING. Hardware persistence tests were compiled, not run. Approved software persistence passed without a TPM."' \
+    > /export/validation.log 2>&1 || { cat /export/validation.log; exit 1; }
+
+FROM scratch AS artifacts
+COPY --from=verify /export/ /

@@ -1,0 +1,49 @@
+# systemd service unit for Najwa Mailbox Server (S16 §12)
+#
+# Install: sudo cp najwa-mailbox.service /etc/systemd/system/
+#          sudo systemctl daemon-reload
+#          sudo systemctl enable --now najwa-mailbox
+
+[Unit]
+Description=Najwa Mailbox Server
+After=tor.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=najwa-mailbox
+Group=najwa-mailbox
+ExecStart=/usr/local/bin/najwa-mailbox /etc/najwa-mailbox/mailbox.toml
+Restart=always
+RestartSec=5
+LimitNOFILE=65536
+
+# Security hardening
+# Database, WAL and SHM files are created 0600 (S16 §12).
+UMask=0077
+NoNewPrivileges=yes
+CapabilityBoundingSet=
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/var/lib/najwa-mailbox /var/log/najwa-mailbox
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+ProtectHostname=yes
+# The server only listens on TCP; it opens no other socket types.
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+RestrictNamespaces=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+RemoveIPC=yes
+MemoryDenyWriteExecute=yes
+SystemCallFilter=@system-service
+SystemCallArchitectures=native
+
+[Install]
+WantedBy=multi-user.target

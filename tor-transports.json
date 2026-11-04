@@ -1,0 +1,39 @@
+{
+  "version": "15.0.26",
+  "source": "https://dist.torproject.org/torbrowser/15.0.26/",
+  "signingKey": "EF6E286DDA85EA2A4BA7DE684E2C6E8793298290",
+  "platforms": {
+    "windows-x86_64": {
+      "archive": "tor-expert-bundle-windows-x86_64-15.0.26.tar.gz",
+      "archiveSha256": "c1988c701de2f24f7d098d1d6d7f507b58f27740d097f29c246e0524d639b252",
+      "binaryMember": "tor/pluggable_transports/lyrebird.exe",
+      "binarySha256": "6e218e85f9a7ae2481f5402ded822471a9a9d0c7e66b05db3842b93fa5c1f02e",
+      "licenseMember": "docs/lyrebird.txt",
+      "licenseSha256": "2331e6517a15ce87e2a1d2838c314ca1b8f3c7a347ac28d370a7fccdb5964f40"
+    },
+    "linux-x86_64": {
+      "archive": "tor-expert-bundle-linux-x86_64-15.0.26.tar.gz",
+      "archiveSha256": "19cf18726eecb362e0f21d27afa9ea9efe5da928bfdfbb1ceb5fe54519e87f4a",
+      "binaryMember": "tor/pluggable_transports/lyrebird",
+      "binarySha256": "ee13ec155cf9b131a3e1b87bd6d697a10c42d04f2eaaeab6b1590c9971d41421",
+      "licenseMember": "docs/lyrebird.txt",
+      "licenseSha256": "2331e6517a15ce87e2a1d2838c314ca1b8f3c7a347ac28d370a7fccdb5964f40"
+    },
+    "macos-aarch64": {
+      "archive": "tor-expert-bundle-macos-aarch64-15.0.26.tar.gz",
+      "archiveSha256": "a3febb6179152b0b4f56a0f5cc57bf5cc8ecef7db35e7c3e9d5a044c8158c26c",
+      "binaryMember": "tor/pluggable_transports/lyrebird",
+      "binarySha256": "94f64abef19dc481f32e41f87ec5f999ad64f04e37ac779121533f1c5b42c9a1",
+      "licenseMember": "docs/lyrebird.txt",
+      "licenseSha256": "2331e6517a15ce87e2a1d2838c314ca1b8f3c7a347ac28d370a7fccdb5964f40"
+    },
+    "macos-x86_64": {
+      "archive": "tor-expert-bundle-macos-x86_64-15.0.26.tar.gz",
+      "archiveSha256": "e1ae4d4a734d28bb590839188511deb3cebc26fcbce9df66d01b2c452060fe95",
+      "binaryMember": "tor/pluggable_transports/lyrebird",
+      "binarySha256": "14b953cb65813857b1492d64ce48a4e981d7d5bff9bc67fa3a899c33daa20fcf",
+      "licenseMember": "docs/lyrebird.txt",
+      "licenseSha256": "2331e6517a15ce87e2a1d2838c314ca1b8f3c7a347ac28d370a7fccdb5964f40"
+    }
+  }
+}

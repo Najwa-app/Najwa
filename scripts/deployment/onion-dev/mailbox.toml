@@ -1,0 +1,57 @@
+# Responsive local testing on real Tor. Keep production PoW.
+[server]
+listen_addr = "0.0.0.0"
+listen_port = 8080
+health_port = 9090
+database_path = "/var/lib/najwa-mailbox/mailbox.db"
+onion_address = "ONION_HOSTNAME"
+
+[quotas]
+max_messages_per_capability = 4096
+max_blob_size_bytes = 262144
+max_storage_per_capability_mb = 512
+max_opks_per_capability = 200
+default_retention_days = 1
+
+[pow]
+min_difficulty = 20
+max_difficulty = 24
+challenge_expiry_secs = 300
+registration_always_requires_pow = true
+# Development bulk-file testing; registration PoW remains required.
+deposit_pow_threshold_per_min = 4096
+prekey_fetch_pow_threshold_per_min = 5
+ephemeral_deposit_min_difficulty = 16
+
+[rate_limits]
+register_per_min = 10
+deposit_per_min_per_cap = 4096
+fetch_per_min_per_cap = 120
+prekey_fetch_per_min = 10
+
+[capability_expiry]
+ephemeral_max_lifetime_hours = 48
+
+[opk]
+low_alert_threshold = 50
+refuse_last_opk = true
+
+[attestation]
+jurisdiction = ""
+infrastructure_provider = "local-development"
+operator_key_path = "/var/lib/najwa-mailbox/operator-seed"
+publish_batching_attestation = true
+
+[batching]
+# No intentional server hold; Tor and recipient polling still add latency.
+min_hold_secs = 0
+max_hold_secs = 0
+jitter_secs = 0
+
+[cleanup]
+interval_secs = 600
+vacuum_threshold_percent = 10
+
+[logging]
+level = "warn"
+format = "json"

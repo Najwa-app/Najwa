@@ -1,0 +1,56 @@
+[package]
+name = "najwa-protocol"
+description = "Protocol logic (contacts, X3DH, Double Ratchet, message format, mailbox client) for Najwa"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+najwa-crypto = { workspace = true }
+najwa-storage = { workspace = true }
+najwa-transport = { workspace = true }
+
+# Async runtime
+tokio = { workspace = true }
+
+# Error handling & logging
+thiserror = { workspace = true }
+tracing = { workspace = true }
+
+# Serialization
+serde = { workspace = true }
+serde_json = { workspace = true }
+bincode = { workspace = true }
+base64 = { workspace = true }
+zeroize = { workspace = true }
+
+# Crypto (PoW solver)
+sha2 = { workspace = true }
+
+# Async
+async-trait = { workspace = true }
+
+# RNG (X3DH ephemeral key generation)
+rand = { workspace = true }
+
+# Compression (QR code payload)
+flate2 = { workspace = true }
+
+# QR code generation (§23.5)
+qrcode = { workspace = true }
+zxcvbn = "=3.1.1"
+bip39 = { workspace = true, features = ["zeroize"] }
+
+[features]
+default = []
+
+[dev-dependencies]
+hex = "0.4"
+criterion = { workspace = true }
+tokio = { workspace = true }
+
+[[bench]]
+name = "protocol_benchmarks"
+harness = false

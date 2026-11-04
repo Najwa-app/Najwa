@@ -1,0 +1,44 @@
+[package]
+name = "najwa-ffi"
+description = "Najwa thin C ABI (S17 §1–§6): 13 operation functions + 6 callbacks + event channel"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[lib]
+name = "najwa_ffi"
+crate-type = ["rlib", "cdylib"]
+
+[features]
+windows-tpm = ["najwa-identity/windows-tpm"]
+linux-tpm = ["najwa-identity/linux-tpm"]
+macos-secure-enclave = ["najwa-identity/macos-secure-enclave"]
+hardware-keystore = ["najwa-identity/hardware-keystore"]
+
+[dependencies]
+najwa-core = { workspace = true }
+najwa-crypto = { workspace = true }
+najwa-identity = { workspace = true }
+najwa-storage = { workspace = true }
+najwa-protocol = { workspace = true }
+najwa-transport = { workspace = true }
+najwa-sanitize = { workspace = true }
+sha2 = { workspace = true }
+
+tokio = { workspace = true }
+zeroize = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+base64 = { workspace = true }
+tracing = { workspace = true }
+
+[dev-dependencies]
+async-trait = { workspace = true }
+tempfile = "3"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+[target.'cfg(target_os = "linux")'.dev-dependencies]
+libc = "0.2"

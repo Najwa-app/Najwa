@@ -1,0 +1,57 @@
+# Test-only mailbox config — no PoW, no batching, relaxed rate limits.
+# Used by: docker-compose.test.yml
+
+[server]
+listen_addr = "0.0.0.0"
+listen_port = 8080
+health_port = 9090
+database_path = "/var/lib/najwa-mailbox/mailbox.db"
+
+[quotas]
+max_messages_per_capability = 4096
+max_blob_size_bytes = 262144
+max_opks_per_capability = 200
+default_retention_days = 1
+
+[pow]
+min_difficulty = 0
+max_difficulty = 0
+registration_always_requires_pow = false
+deposit_pow_threshold_per_min = 99999
+prekey_fetch_pow_threshold_per_min = 99999
+# S16 §7.2 always-on floor for deposits to type-1 (ephemeral handshake) caps.
+# Explicitly disabled here like every other PoW knob above — the test client
+# does not solve challenges. Production leaves this at its 16 default; every QR
+# handshake hands out a type-1 cap, so it is the cheapest flooding target.
+ephemeral_deposit_min_difficulty = 0
+
+[rate_limits]
+register_per_min = 1000
+deposit_per_min_per_cap = 1000
+fetch_per_min_per_cap = 1000
+prekey_fetch_per_min = 1000
+
+[capability_expiry]
+ephemeral_max_lifetime_hours = 48
+
+[opk]
+low_alert_threshold = 50
+refuse_last_opk = true
+
+[attestation]
+jurisdiction = ""
+infrastructure_provider = ""
+operator_key_seed_hex = ""
+publish_batching_attestation = false
+
+[batching]
+min_hold_secs = 0
+max_hold_secs = 0
+jitter_secs = 0
+
+[cleanup]
+interval_secs = 3600
+
+[logging]
+level = "warn"
+format = "text"

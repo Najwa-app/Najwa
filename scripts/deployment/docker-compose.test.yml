@@ -1,0 +1,29 @@
+# Test mailbox server — no Tor, no PoW, no batching.
+#
+# Usage (tests run inside a container on the compose network; no host ports
+# are published, so this never collides with anything else on the host):
+#   docker compose -f docker-compose.test.yml up -d --build
+#   docker run --rm --network deployment_default \
+#     -v <repository-root>:/work -w /work -e CARGO_TARGET_DIR=target-linux \
+#     -e TEST_MAILBOX_ADDR=mailbox rust:bookworm \
+#     cargo test -p najwa-core --test live_mailbox -- --ignored --skip tor_sqlite --nocapture
+#   docker compose -f docker-compose.test.yml down
+
+services:
+  mailbox:
+    build:
+      context: ../..
+      dockerfile: scripts/deployment/Dockerfile
+    container_name: najwa-mailbox-test
+    restart: "no"
+    volumes:
+      - ./config/mailbox-test.toml:/etc/najwa-mailbox/mailbox.toml:ro
+    # No host port bindings: the live suite runs on the compose network and
+    # reaches the server as `mailbox` (TEST_MAILBOX_ADDR). Publish ports
+    # manually if you need host-side access.
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://127.0.0.1:9090/v1/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s

@@ -1,0 +1,43 @@
+[package]
+name = "najwa-web"
+description = "Persistent local browser app for Najwa"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[features]
+default = ["hardware-keystore", "approved-software-fallback"]
+bundled-ui = []
+hardware-keystore = ["najwa-identity/hardware-keystore", "najwa-ffi/hardware-keystore"]
+approved-software-fallback = ["najwa-identity/approved-software-fallback"]
+
+[dependencies]
+najwa-identity.workspace = true
+najwa-crypto.workspace = true
+najwa-privacy.workspace = true
+najwa-ffi.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+tokio.workspace = true
+zeroize.workspace = true
+base64.workspace = true
+axum = "0.8.9"
+futures-util = "0.3"
+fs2 = "0.4"
+directories = "6"
+
+[dev-dependencies]
+tempfile = "3"
+tower = { version = "0.5", features = ["util"] }
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.59", features = ["Win32_Foundation", "Win32_Graphics_Gdi", "Win32_System_LibraryLoader", "Win32_System_Power", "Win32_System_RemoteDesktop", "Win32_UI_Shell", "Win32_UI_WindowsAndMessaging"] }
+
+# OS lock listeners (src/os_lock.rs). Both already ship in the app, through
+# najwa-identity (dbus-secret-service with vendored libdbus; security-framework).
+[target.'cfg(target_os = "linux")'.dependencies]
+dbus = "0.9.12"
+
+[target.'cfg(target_os = "macos")'.dependencies]
+core-foundation = "0.9.4"

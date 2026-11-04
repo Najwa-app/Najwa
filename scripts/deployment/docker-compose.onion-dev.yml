@@ -1,0 +1,104 @@
+# Real Tor development mailbox. No host ports are published.
+# Start from the repository root; see ONION-DEVELOPMENT.md.
+name: najwa-onion-dev
+
+x-mailbox-image: &mailbox-image
+  image: najwa-onion-dev-mailbox
+  build:
+    context: ../..
+    dockerfile: scripts/deployment/Dockerfile
+
+services:
+  tor:
+    build:
+      context: ./onion-dev
+      dockerfile: Dockerfile.tor
+    image: najwa-onion-dev-tor
+    restart: "no"
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    environment:
+      NAJWA_MAILBOX_IP: ${NAJWA_DEV_MAILBOX_IP:-172.31.253.2}
+    volumes:
+      - tor-state:/var/lib/tor
+      - onion-address:/var/lib/najwa-onion
+    networks:
+      mailbox-private:
+        ipv4_address: ${NAJWA_DEV_TOR_IP:-172.31.253.3}
+      tor-internet: {}
+    healthcheck:
+      # This means the onion address exists, not that Tor has bootstrapped.
+      test: [CMD-SHELL, "test -s /var/lib/najwa-onion/hostname"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+    pids_limit: 64
+    mem_limit: 512m
+    ulimits:
+      core: 0
+    logging:
+      options:
+        max-size: 10m
+        max-file: "2"
+
+  initialize:
+    <<: *mailbox-image
+    restart: "no"
+    network_mode: none
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    entrypoint: [/bin/sh, /opt/najwa/initialize.sh]
+    ulimits:
+      core: 0
+    depends_on:
+      tor:
+        condition: service_healthy
+    volumes:
+      - mailbox-state:/var/lib/najwa-mailbox
+      - onion-address:/var/lib/najwa-onion:ro
+      - ./onion-dev/initialize.sh:/opt/najwa/initialize.sh:ro
+      - ./onion-dev/mailbox.toml:/opt/najwa/mailbox.toml:ro
+
+  mailbox:
+    <<: *mailbox-image
+    restart: "no"
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    command: [/var/lib/najwa-mailbox/mailbox.toml]
+    depends_on:
+      initialize:
+        condition: service_completed_successfully
+    volumes:
+      - mailbox-state:/var/lib/najwa-mailbox
+    networks:
+      mailbox-private:
+        ipv4_address: ${NAJWA_DEV_MAILBOX_IP:-172.31.253.2}
+    healthcheck:
+      test: [CMD, curl, -sf, http://127.0.0.1:9090/v1/health]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    pids_limit: 128
+    mem_limit: 512m
+    ulimits:
+      core: 0
+    logging:
+      options:
+        max-size: 10m
+        max-file: "2"
+
+networks:
+  mailbox-private:
+    internal: true
+    ipam:
+      config:
+        - subnet: ${NAJWA_DEV_SUBNET:-172.31.253.0/24}
+  tor-internet: {}
+
+volumes:
+  tor-state: {}
+  onion-address: {}
+  mailbox-state: {}

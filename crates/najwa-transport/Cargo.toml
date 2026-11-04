@@ -1,0 +1,34 @@
+[package]
+name = "najwa-transport"
+description = "Tor transport layer for Najwa"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+najwa-crypto = { workspace = true }
+
+# Async runtime
+tokio = { workspace = true }
+async-trait = { workspace = true }
+
+# Tor integration
+arti-client = { workspace = true }
+tor-rtcompat = { workspace = true }
+
+# rusqlite with bundled-sqlcipher is required so that arti-client's
+# transitive rusqlite dependency (via tor-dirmgr) uses the bundled
+# SQLite instead of expecting a system library.
+rusqlite = { workspace = true }
+
+# Error handling & logging
+thiserror = { workspace = true }
+tracing = { workspace = true }
+
+# Serialization
+serde = { workspace = true }
+
+[dev-dependencies]
+tokio = { workspace = true }

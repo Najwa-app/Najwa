@@ -1,0 +1,54 @@
+[package]
+name = "najwa-crypto"
+description = "Cryptographic primitives for the Najwa messaging protocol"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+# Phase 1: Cryptographic libraries
+ed25519-dalek = { workspace = true }
+x25519-dalek = { workspace = true }
+chacha20poly1305 = { workspace = true }
+hkdf = { workspace = true }
+sha2 = { workspace = true }
+hmac = { workspace = true }
+argon2 = { workspace = true }
+rand = { workspace = true }
+rand_core = { workspace = true }
+getrandom = { workspace = true }
+
+# Curve operations (for Ed25519 → X25519 conversion)
+curve25519-dalek = "4.1"
+
+# Constant-time comparison
+subtle = "2.5"
+
+# Secure memory
+zeroize = { workspace = true }
+secrecy = { workspace = true }
+
+# Serialization
+serde = { workspace = true }
+
+# Error handling & logging
+thiserror = { workspace = true }
+tracing = { workspace = true }
+
+# Platform: Windows mlock
+[target.'cfg(target_os = "windows")'.dependencies]
+windows-sys = { version = "0.59", features = ["Win32_System_Memory", "Win32_System_Diagnostics_Debug", "Win32_System_ErrorReporting", "Win32_System_SystemInformation", "Win32_System_Threading"] }
+
+# Platform: Unix mlock / core dump prevention
+[target.'cfg(any(target_os = "linux", target_os = "macos"))'.dependencies]
+libc = "0.2"
+
+[dev-dependencies]
+hex = "0.4"
+criterion = { workspace = true }
+
+[[bench]]
+name = "crypto_benchmarks"
+harness = false

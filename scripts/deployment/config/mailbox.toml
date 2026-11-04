@@ -1,0 +1,69 @@
+# Najwa Mailbox Server Configuration (S16 §5)
+#
+# Copy this file and edit before deployment.
+# Generate operator key: openssl rand -hex 32
+
+[server]
+listen_addr = "0.0.0.0"
+listen_port = 8080
+health_port = 9090
+database_path = "/var/lib/najwa-mailbox/mailbox.db"
+# Your .onion address (populated after first Tor start)
+onion_address = ""
+# Retirement (S16 §13): set a Unix time and restart to refuse new
+# registrations; existing queues are served until you stop the server.
+# retire_at = 1767225600
+
+[quotas]
+max_messages_per_capability = 4096
+max_blob_size_bytes = 262144
+max_storage_per_capability_mb = 512
+max_opks_per_capability = 200
+default_retention_days = 14
+
+[pow]
+min_difficulty = 20
+max_difficulty = 24
+challenge_expiry_secs = 300
+registration_always_requires_pow = true
+deposit_pow_threshold_per_min = 10
+prekey_fetch_pow_threshold_per_min = 5
+ephemeral_deposit_min_difficulty = 16
+
+[rate_limits]
+register_per_min = 10
+deposit_per_min_per_cap = 60
+fetch_per_min_per_cap = 120
+prekey_fetch_per_min = 10
+
+[capability_expiry]
+ephemeral_max_lifetime_hours = 48 # server clamp for type-1 expires_at (S16 §3.1)
+
+[opk]
+low_alert_threshold = 50
+refuse_last_opk = true # MUST be true; the server refuses to start otherwise (S16 §5)
+
+[attestation]
+jurisdiction = ""
+infrastructure_provider = ""
+# Ed25519 private key seed (64 hex chars). Generate: openssl rand -hex 32
+# (or set operator_key_path to a 0600 file holding the seed; the path wins)
+operator_key_seed_hex = ""
+publish_batching_attestation = true
+
+[batching]
+# How long each message waits before it can be fetched: a random hold between
+# min and max, plus 0..jitter seconds. 0 / 0 / 0 releases at once; the
+# timing-privacy profile is 30 / 300 / 60. What each protects against and
+# costs: docs/server/deployment.md §7.1.
+min_hold_secs = 0
+max_hold_secs = 0
+jitter_secs = 0
+
+[cleanup]
+interval_secs = 600
+vacuum_threshold_percent = 10
+
+[logging]
+level = "info"
+format = "json" # logs go to standard output (journald or the container log)

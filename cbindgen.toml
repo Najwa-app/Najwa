@@ -1,0 +1,60 @@
+# cbindgen configuration for the najwa-ffi C header (S17 §6).
+#
+# Regenerate after changing any `#[no_mangle] pub extern "C"` signature:
+#   cbindgen --config cbindgen.toml --crate najwa-ffi --output crates/najwa-ffi/include/najwa.h
+#
+# The committed header is maintained by hand and is the build input. No build
+# step runs cbindgen or compares the header with the Rust exports. CI
+# (.github/workflows/test.yml) compiles it as C and C++ and runs
+# crates/najwa-ffi/tests/c_abi_smoke.c, which links every declared function
+# against the cdylib but does not check signatures. After regenerating,
+# restore the NAJWA_* error-code macros and the contract comments, and keep the
+# S17 §4.5 inventory in step.
+
+language = "C"
+include_guard = "NAJWA_CORE_H"
+# Error codes appear in the header as NAJWA_* macros (S17 §2), not as a C enum.
+# No [export] prefix is set: the symbols already carry the najwa_ prefix, and
+# a "Najwa" prefix would produce Najwanajwa_* names (S17 §6).
+autogen_warning = "/* Maintained by hand to match the najwa-ffi exports (S17 §6). */"
+include_version = true
+header = """/* Najwa thin C ABI (S17 §1–§6).
+ *
+ * 13 operation functions (§4.1–§4.4) + 7 callback functions (§5.2 + clear).
+ * Contracts (normative, apply to every symbol):
+ *  - §3: no panic crosses the boundary; NULL/UTF-8 inputs rejected by code.
+ *  - §4.4: strings returned by najwa_* MUST be freed with najwa_free_string
+ *    (zeroize-before-free); najwa_version() is static and MUST NOT be freed.
+ *  - §5.3: after najwa_set_*_callback / najwa_clear_all_callbacks returns,
+ *    the previous callback is quiescent (not executing, never invoked again).
+ *  - §5.5: callbacks fire on ONE dedicated thread; callbacks MUST NOT call
+ *    any najwa_* function (no re-entry).
+ *  - §5.6: returned JSON may contain plaintext; free via najwa_free_string.
+ */"""
+
+[export]
+include = [
+    "najwa_init",
+    "najwa_identity_exists",
+    "najwa_create_identity",
+    "najwa_unlock",
+    "najwa_lock",
+    "najwa_cancel_operations",
+    "najwa_list_contacts",
+    "najwa_list_messages",
+    "najwa_send_message",
+    "najwa_poll_messages",
+    "najwa_update_battery",
+    "najwa_free_string",
+    "najwa_version",
+    "najwa_set_message_received_callback",
+    "najwa_set_message_status_callback",
+    "najwa_set_connection_status_callback",
+    "najwa_set_error_callback",
+    "najwa_set_feature_toggle_callback",
+    "najwa_set_event_callback",
+    "najwa_clear_all_callbacks",
+]
+
+[parse]
+parse_deps = false

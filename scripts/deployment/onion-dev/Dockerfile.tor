@@ -1,0 +1,11 @@
+FROM debian:bookworm-slim
+
+RUN apt-get update && apt-get install -y --no-install-recommends tor ca-certificates \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /var/lib/tor /var/lib/najwa-onion \
+    && chown debian-tor:debian-tor /var/lib/tor /var/lib/najwa-onion \
+    && chmod 700 /var/lib/tor && chmod 755 /var/lib/najwa-onion
+COPY torrc /etc/tor/torrc
+COPY start-tor.sh /usr/local/bin/start-tor.sh
+USER debian-tor
+ENTRYPOINT ["/bin/sh", "/usr/local/bin/start-tor.sh"]

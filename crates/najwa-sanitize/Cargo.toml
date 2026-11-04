@@ -1,0 +1,28 @@
+[package]
+name = "najwa-sanitize"
+description = "Media metadata stripping for Najwa"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+image = { version = "0.25", default-features = false, features = ["jpeg", "png", "gif", "bmp", "tiff", "webp"] }
+# Error handling & logging
+thiserror = { workspace = true }
+tracing = { workspace = true }
+zeroize = { workspace = true }
+
+# DEFLATE inflation + CRC32 for ZIP-based documents (DOCX/ODT, S11 §7.5-7.6).
+# Already a workspace dependency (najwa-protocol QR encoding).
+flate2 = { workspace = true }
+lopdf = { version = "0.42", default-features = false }
+quick-xml = "0.41"
+
+[dev-dependencies]
+criterion = { workspace = true }
+
+[[bench]]
+name = "sanitize_benchmarks"
+harness = false
